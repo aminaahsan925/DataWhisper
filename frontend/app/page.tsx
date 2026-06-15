@@ -1,15 +1,20 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 
-const BACKEND = "http://localhost:8000";
+// Use environment variable or try to auto-detect Codespace URL
+const BACKEND = 
+  process.env.NEXT_PUBLIC_BACKEND_URL || 
+  (typeof window !== 'undefined' && window.location.hostname.includes('github.dev')
+    ? `https://${window.location.hostname.split('-')[0]}-${window.location.hostname.split('-')[1]}.github.dev:8000`
+    : "http://localhost:8000");
 
 const features = [
-  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>), title: "Upload Any File", desc: "CSV, Excel — drag and drop. Instant parsing." },
-  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>), title: "Ask in Plain English", desc: "No SQL, no formulas. Just type and get answers." },
-  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>), title: "Live Charts", desc: "Charts generated automatically from your data." },
-  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>), title: "Deep Analysis", desc: "Outliers, trends, correlations — explained clearly." },
-  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>), title: "Export Reports", desc: "One-click PDF reports, ready to share." },
-  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>), title: "100% Private", desc: "Your data never leaves your session." },
+  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>), title: "Upload CSV/Excel", desc: "Drag and drop any CSV or Excel file" },
+  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>), title: "Instant Analysis", desc: "AI processes your data in seconds" },
+  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="9" y1="20" x2="9" y2="4"/><line x1="4" y1="12" x2="4" y2="20"/></svg>), title: "Rich Insights", desc: "Get actionable data-driven answers" },
+  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>), title: "Natural Language", desc: "Ask questions in plain English" },
+  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>), title: "Free & Fast", desc: "No credit card, no limits" },
+  { icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>), title: "Secure", desc: "Your data stays private" },
 ];
 
 type Message = { role: "user" | "ai"; text: string };
@@ -66,10 +71,10 @@ export default function Home() {
 
   const S: Record<string, React.CSSProperties> = {
     page: { minHeight: "100vh", background: "#09090B", color: "#FAFAFA", overflowX: "hidden", fontFamily: "'Inter', system-ui, sans-serif" },
-    nav: { position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 2rem", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(9,9,11,0.85)", backdropFilter: "blur(12px)" },
+    nav: { position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 2rem", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" },
     card: { background: "#111113", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "20px" },
     btn: { background: "#6366F1", color: "white", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "14px", fontWeight: 500, cursor: "pointer" },
-    inp: { flex: 1 as unknown as undefined, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "9px 14px", fontSize: "13px", color: "rgba(255,255,255,0.8)", outline: "none" },
+    inp: { flex: 1 as unknown as undefined, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "9px 14px", fontSize: "13px", color: "rgba(255,255,255,0.9)" },
   };
 
   return (
@@ -86,8 +91,8 @@ export default function Home() {
         </div>
       </nav>
 
-      <section style={{ maxWidth: "900px", margin: "0 auto", padding: "100px 2rem 80px", textAlign: "center", opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(16px)", transition: "opacity 0.8s ease, transform 0.8s ease" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: "100px", padding: "5px 14px", fontSize: "12px", fontWeight: 500, color: "#A5B4FC", marginBottom: "32px" }}>
+      <section style={{ maxWidth: "900px", margin: "0 auto", padding: "100px 2rem 80px", textAlign: "center", opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(10px)", transition: "all 0.6s ease" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: "100px", padding: "5px 12px", fontSize: "12px", color: "#A5B4FC", marginBottom: "24px" }}>
           <span style={{ width: "6px", height: "6px", background: "#6366F1", borderRadius: "50%", display: "inline-block" }} />
           Powered by Gemini AI · Python · FastAPI
         </div>
@@ -120,11 +125,12 @@ export default function Home() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={e => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]); }} onClick={() => fileInputRef.current?.click()}
-              style={{ ...S.card, border: dragOver ? "1px solid #6366F1" : fileInfo ? "1px solid rgba(34,197,94,0.4)" : "1px dashed rgba(255,255,255,0.15)", cursor: "pointer", textAlign: "center", padding: "36px 20px", transition: "all 0.2s" }}>
+            <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={e => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]); }}
+              style={{ ...S.card, border: dragOver ? "1px solid #6366F1" : fileInfo ? "1px solid rgba(34,197,94,0.4)" : "1px dashed rgba(255,255,255,0.15)", cursor: "pointer", textAlign: "center", paddingTop: "40px", paddingBottom: "40px" }}
+              onClick={() => fileInputRef.current?.click()}>
               <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: "none" }} onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
               {uploading ? <div style={{ color: "#A5B4FC", fontSize: "14px" }}>Uploading...</div>
-                : fileInfo ? (<><div style={{ color: "#22C55E", fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>✓ {fileInfo.filename}</div><div style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px" }}>{fileInfo.rows.toLocaleString()} rows · {fileInfo.columns.length} columns · Click to change</div></>)
+                : fileInfo ? (<><div style={{ color: "#22C55E", fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>✓ {fileInfo.filename}</div><div style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px" }}>Click to change</div></>)
                 : (<><div style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", marginBottom: "6px" }}>Drop your CSV or Excel file here</div><div style={{ color: "rgba(255,255,255,0.2)", fontSize: "12px" }}>or click to browse</div></>)}
               {uploadError && <div style={{ color: "#EF4444", fontSize: "12px", marginTop: "10px" }}>{uploadError}</div>}
             </div>
@@ -132,8 +138,8 @@ export default function Home() {
               <div style={{ ...S.card, overflow: "auto", maxHeight: "280px" }}>
                 <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "12px" }}>Data Preview</div>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                  <thead><tr>{fileInfo.columns.map(col => (<th key={col} style={{ textAlign: "left", padding: "6px 10px", color: "rgba(255,255,255,0.4)", borderBottom: "1px solid rgba(255,255,255,0.06)", whiteSpace: "nowrap", fontWeight: 500 }}>{col}</th>))}</tr></thead>
-                  <tbody>{fileInfo.preview.map((row, i) => (<tr key={i}>{fileInfo.columns.map(col => (<td key={col} style={{ padding: "6px 10px", color: "rgba(255,255,255,0.6)", borderBottom: "1px solid rgba(255,255,255,0.04)", whiteSpace: "nowrap" }}>{String(row[col] ?? "")}</td>))}</tr>))}</tbody>
+                  <thead><tr>{fileInfo.columns.map(col => (<th key={col} style={{ textAlign: "left", padding: "6px 10px", color: "rgba(255,255,255,0.4)", borderBottom: "1px solid rgba(255,255,255,0.08)", fontWeight: 500 }}>{col}</th>))}</tr></thead>
+                  <tbody>{fileInfo.preview.map((row, i) => (<tr key={i}>{fileInfo.columns.map(col => (<td key={col} style={{ padding: "6px 10px", color: "rgba(255,255,255,0.6)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{String(row[col] || "")}</td>))}</tr>))}</tbody>
                 </table>
               </div>
             )}
@@ -147,8 +153,8 @@ export default function Home() {
               {messages.length === 0 && <div style={{ color: "rgba(255,255,255,0.2)", fontSize: "13px", textAlign: "center", marginTop: "40px" }}>Upload a file to start asking questions</div>}
               {messages.map((msg, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                  <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", lineHeight: 1.6, background: msg.role === "user" ? "#6366F1" : "rgba(255,255,255,0.05)", color: msg.role === "user" ? "white" : "rgba(255,255,255,0.8)", border: msg.role === "ai" ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                    {msg.role === "ai" && <div style={{ fontSize: "10px", color: "#A5B4FC", fontWeight: 600, letterSpacing: "0.05em", marginBottom: "4px", textTransform: "uppercase" }}>DataWhisper AI</div>}
+                  <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", lineHeight: 1.6, background: msg.role === "user" ? "#6366F1" : "rgba(255,255,255,0.05)", border: msg.role === "ai" ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+                    {msg.role === "ai" && <div style={{ fontSize: "10px", color: "#A5B4FC", fontWeight: 600, letterSpacing: "0.05em", marginBottom: "4px", textTransform: "uppercase" }}>DataWhisper</div>}
                     {msg.text}
                   </div>
                 </div>
@@ -192,7 +198,7 @@ export default function Home() {
         <div style={{ background: "#111113", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "16px", padding: "56px 40px" }}>
           <h2 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.025em", marginBottom: "16px" }}>Ready to get started?</h2>
           <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.4)", marginBottom: "32px", lineHeight: 1.6 }}>Upload your first file and ask anything. No account required.</p>
-          <button style={{ ...S.btn, padding: "14px 32px", fontSize: "15px", fontWeight: 600, borderRadius: "10px" }} onClick={() => document.getElementById("app")?.scrollIntoView({ behavior: "smooth" })}>Start for free →</button>
+          <button style={{ ...S.btn, padding: "14px 32px", fontSize: "15px", fontWeight: 600, borderRadius: "10px" }} onClick={() => document.getElementById("app")?.scrollIntoView({ behavior: "smooth" })}>Get started →</button>
         </div>
       </section>
 
